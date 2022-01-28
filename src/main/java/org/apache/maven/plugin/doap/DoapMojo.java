@@ -48,7 +48,6 @@ import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.ProjectBuildingException;
 import org.apache.maven.scm.manager.NoSuchScmProviderException;
 import org.apache.maven.scm.manager.ScmManager;
-import org.apache.maven.scm.provider.cvslib.repository.CvsScmProviderRepository;
 import org.apache.maven.scm.provider.svn.repository.SvnScmProviderRepository;
 import org.apache.maven.scm.repository.ScmRepository;
 import org.apache.maven.scm.repository.ScmRepositoryException;
@@ -794,13 +793,14 @@ public class DoapMojo
         // Releases
         writeReleases( writer, project );
 
-        // Developers
-        List<Contributor> developers = project.getDevelopers();
-        writeContributors( writer, developers );
+        // Developers && Contributors
+        List<Developer> developers = project.getDevelopers();
+        List<Contributor> contributors = project.getContributors();
 
         // Contributors
-        List<Contributor> contributors = project.getContributors();
-        writeContributors( writer, contributors );
+        List<Contributor> all = new ArrayList<>( developers );
+        all.addAll( contributors );
+        writeContributors( writer, all );
 
         // Extra DOAP
         Map<Object, String> map = doapOptions.getExtra();
@@ -1659,16 +1659,7 @@ public class DoapMojo
 
         DoapUtil.writeStartElement( writer, doapOptions.getXmlnsPrefix(), "repository" );
 
-        if ( isScmSystem( repository, "cvs" ) )
-        {
-            DoapUtil.writeStartElement( writer, doapOptions.getXmlnsPrefix(), "CVSRepository" );
-
-            CvsScmProviderRepository cvsRepo = (CvsScmProviderRepository) repository.getProviderRepository();
-
-            DoapUtil.writeElement( writer, doapOptions.getXmlnsPrefix(), "anon-root", cvsRepo.getCvsRoot() );
-            DoapUtil.writeElement( writer, doapOptions.getXmlnsPrefix(), "module", cvsRepo.getModule() );
-        }
-        else if ( isScmSystem( repository, "svn" ) )
+        if ( isScmSystem( repository, "svn" ) )
         {
             DoapUtil.writeStartElement( writer, doapOptions.getXmlnsPrefix(), "SVNRepository" );
 
